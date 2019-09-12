@@ -207,6 +207,10 @@
               "active": {
                 "type": ["null", "boolean"]
               },
+              "creation_date": {
+                "type": ["null", "string"],
+                "format": "date-time"
+              },
               "amortization_profile": {
                 "type": ["null", "string"]
               },
@@ -214,17 +218,8 @@
                 "type": ["null", "string"]
               },
               "fee_product_rules": {
-                "anyOf": [
-                  {
-                    "type": "array",
-                    "items": {
-                      "type": ["null", "string"]
-                    }
-                  },
-                  {
-                    "type": "null"
-                  }
-                ]
+                "type": ["null", "array"],
+                "items": {}
               }
             }
           }
@@ -247,17 +242,8 @@
       "type": ["null", "string"]
     },
     "savings_product_rules": {
-      "anyOf": [
-        {
-          "type": "array",
-          "items": {
-            "type": ["null", "string"]
-          }
-        },
-        {
-          "type": "null"
-        }
-      ]
+      "type": ["null", "array"],
+      "items": {}
     },
     "interest_accrued_accounting_method": {
       "type": ["null", "string"]
@@ -351,7 +337,16 @@
         {
           "type": "array",
           "items": {
-            "type": ["null", "string"]
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "encoded_key": {
+                "type": ["null", "string"]
+              },
+              "branch_key": {
+                "type": ["null", "string"]
+              }
+            }
           }
         },
         {
