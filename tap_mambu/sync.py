@@ -1,6 +1,7 @@
 from datetime import datetime
 import singer
 from singer import metrics, metadata, Transformer, utils
+from singer.utils import strptime_to_utc
 from tap_mambu.transform import transform_json
 
 LOGGER = singer.get_logger()
@@ -78,8 +79,12 @@ def process_records(catalog, #pylint: disable=too-many-branches
 
                 # Reset max_bookmark_value to new value if higher
                 if bookmark_field and (bookmark_field in transformed_record):
-                    if (max_bookmark_value is None) or \
-                        (transformed_record[bookmark_field] > max_bookmark_value):
+                    bookmark_dttm = strptime_to_utc(transformed_record[bookmark_field])
+                    if max_bookmark_value:
+                        max_bookmark_value_dttm = strptime_to_utc(max_bookmark_value)
+                        if bookmark_dttm > max_bookmark_value_dttm:
+                            max_bookmark_value = transformed_record[bookmark_field]
+                    else:
                         max_bookmark_value = transformed_record[bookmark_field]
 
                 if bookmark_field and (bookmark_field in transformed_record):
@@ -332,14 +337,20 @@ def should_sync_stream(selected_streams, last_stream, stream_name):
 def sync(client, config, catalog, state):
     if 'start_date' in config:
         start_date = config['start_date']
+    # LOGGER.info('start_date = {}'.format(start_date))
 
     # Get datetimes for endpoint parameters
     communications_dttm_str = get_bookmark(state, 'communications', start_date)
     communications_dt_str = transform_datetime(communications_dttm_str)[:10]
-    deposit_transactions_dttm_str = get_bookmark(state, 'deposit_transaction', start_date)
+    # LOGGER.info('communications bookmark_date = {}'.format(communications_dt_str))
+
+    deposit_transactions_dttm_str = get_bookmark(state, 'deposit_transactions', start_date)
     deposit_transactions_dt_str = transform_datetime(deposit_transactions_dttm_str)[:10]
-    loan_transactions_dttm_str = get_bookmark(state, 'loan_transaction', start_date)
+    # LOGGER.info('deposit_transactions bookmark_date = {}'.format(deposit_transactions_dt_str))
+
+    loan_transactions_dttm_str = get_bookmark(state, 'loan_transactions', start_date)
     loan_transactions_dt_str = transform_datetime(loan_transactions_dttm_str)[:10]
+    # LOGGER.info('loan_transactions bookmark_date = {}'.format(loan_transactions_dt_str))
 
     selected_streams = get_selected_streams(catalog)
     LOGGER.info('selected_streams: {}'.format(selected_streams))
